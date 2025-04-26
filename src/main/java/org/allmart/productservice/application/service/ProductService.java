@@ -3,14 +3,15 @@ package org.allmart.productservice.application.service;
 import org.allmart.productservice.application.port.iin.ProductUseCase;
 import org.allmart.productservice.application.port.out.ProductPersistencePort;
 import org.allmart.productservice.domain.Product;
-import org.allmart.productservice.exception.ProductNotFoundException;
+import org.allmart.productservice.exception.ProductErrorCode;
+import org.allmart.productservice.exception.ProductException;
 
 public class ProductService implements ProductUseCase {
 
     private final ProductPersistencePort productPersistencePort;
 
     public ProductService(ProductPersistencePort productPersistencePort) {
-        this.productPersistencePort = productPersistencePort ;
+        this.productPersistencePort = productPersistencePort;
     }
 
     @Override
@@ -21,6 +22,19 @@ public class ProductService implements ProductUseCase {
     @Override
     public Product getProductById(String productId) {
 
-        return productPersistencePort.findByProductId(productId).orElseThrow(() -> new ProductNotFoundException(productId));
+        return productPersistencePort.findByProductId(productId).orElseThrow(()
+                -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
+    }
+
+    @Override
+    public Product registerProduct(Product product) {
+        if (product.getProductId() == null || product.getProductName().trim().isEmpty())
+            throw new ProductException(ProductErrorCode.PRODUCT_NAME_EMPTY);
+
+        productPersistencePort.findByProductId(product.getProductId()).ifPresent(existingProduct -> {
+            throw new ProductException(ProductErrorCode.PRODUCT_ALREADY_EXISTS);
+        });
+
+        return productPersistencePort.save(product);
     }
 }

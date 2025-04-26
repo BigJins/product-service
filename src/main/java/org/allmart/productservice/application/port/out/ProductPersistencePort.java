@@ -7,4 +7,6 @@ import java.util.Optional;
 public interface ProductPersistencePort {
     Iterable<Product> findAll();
     Optional<Product> findByProductId(String productId);
+
+    Product save(Product product);
 }

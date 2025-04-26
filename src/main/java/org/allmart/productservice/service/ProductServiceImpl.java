@@ -4,7 +4,8 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.allmart.productservice.entity.ProductEntity;
 import org.allmart.productservice.entity.ProductRepository;
-import org.allmart.productservice.exception.ProductNotFoundException;
+import org.allmart.productservice.exception.ProductErrorCode;
+import org.allmart.productservice.exception.ProductException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductEntity getProductById(String productId) {
         return productRepository.findByProductId(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+                .orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 }

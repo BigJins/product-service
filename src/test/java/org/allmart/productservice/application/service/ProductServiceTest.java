@@ -1,10 +1,9 @@
 package org.allmart.productservice.application.service;
 
-import org.allmart.productservice.application.port.iin.ProductUseCase;
 import org.allmart.productservice.application.port.out.ProductPersistencePort;
 import org.allmart.productservice.domain.Product;
-import org.allmart.productservice.entity.ProductRepository;
-import org.allmart.productservice.exception.ProductNotFoundException;
+import org.allmart.productservice.exception.ProductErrorCode;
+import org.allmart.productservice.exception.ProductException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -93,10 +92,85 @@ class ProductServiceTest {
 
         when(productPersistencePort.findByProductId(InvalidValue)).thenReturn(Optional.empty());
 
-        // when & then
+        // when
+        ProductException exception = assertThrows(ProductException.class, () -> productService.getProductById(InvalidValue));
 
-        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(InvalidValue));
+        // then
+        assertEquals(ProductErrorCode.PRODUCT_NOT_FOUND, exception.getErrorCode());
 
+    }
+
+
+    @Test
+    void 신상품을_등록해보자() {
+        // given
+        Product newProduct = Product.builder()
+                .productId("dnf_195")
+                .productName("대구는 사과")
+                .stock(100)
+                .unitPrice(BigDecimal.valueOf(3000))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(productPersistencePort.save(newProduct)).thenReturn(newProduct);
+
+        // when
+        Product savedProduct = productService.registerProduct(newProduct);
+
+        // then
+        assertNotNull(savedProduct);
+        assertEquals("dnf_195", savedProduct.getProductId());
+        assertEquals("대구는 사과", savedProduct.getProductName());
+    }
+
+    @Test
+    void 상품명이_빈_값이면_등록_실패_테스트() {
+        // given
+        Product newProduct = Product.builder()
+                .productId("dnf_195")
+                .productName("")// 공란
+                .stock(100)
+                .unitPrice(BigDecimal.valueOf(3000))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        // when
+        ProductException exception = assertThrows(ProductException.class, () -> productService.registerProduct(newProduct));
+
+        // then
+        assertEquals(ProductErrorCode.PRODUCT_NAME_EMPTY, exception.getErrorCode());
+    }
+
+    @Test
+    void 같은_상품ID_가_중복이면_등록_실패_테스트() {
+
+        // given
+        String existingProductId = "dnf_195";
+
+        Product existingProduct = Product.builder()
+                .productId(existingProductId)
+                .productName("대구는 사과")
+                .stock(100)
+                .unitPrice(BigDecimal.valueOf(3000))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(productPersistencePort.findByProductId(existingProductId)).thenReturn(Optional.of(existingProduct));
+
+
+        Product product2 = Product.builder()
+                .productId(existingProductId)
+                .productName("얼음골 배")
+                .stock(100)
+                .unitPrice(BigDecimal.valueOf(2000))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        // when
+        ProductException exception = assertThrows(ProductException.class,() -> productService.registerProduct(product2));
+
+        // then
+        assertEquals(ProductErrorCode.PRODUCT_ALREADY_EXISTS, exception.getErrorCode());
 
     }
 }
