@@ -6,6 +6,7 @@ import org.allmart.productservice.domain.Product;
 import org.allmart.productservice.exception.ProductErrorCode;
 import org.allmart.productservice.exception.ProductException;
 
+
 public class ProductService implements ProductUseCase {
 
     private final ProductPersistencePort productPersistencePort;
@@ -28,8 +29,7 @@ public class ProductService implements ProductUseCase {
 
     @Override
     public Product registerProduct(Product product) {
-        if (product.getProductId() == null || product.getProductName().trim().isEmpty())
-            throw new ProductException(ProductErrorCode.PRODUCT_NAME_EMPTY);
+        product.validateForRegistration();
 
         productPersistencePort.findByProductId(product.getProductId()).ifPresent(existingProduct -> {
             throw new ProductException(ProductErrorCode.PRODUCT_ALREADY_EXISTS);

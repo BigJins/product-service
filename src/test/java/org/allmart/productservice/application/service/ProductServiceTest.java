@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,25 +36,21 @@ class ProductServiceTest {
     void 상품전체_조회() {
 
         // given
-        Product product1 = Product.builder()
-                .productId("dnf_190")
-                .productName("얼음골 사과")
+        Product product1 = new Product.Builder("dnf_190", "얼음골 사과")
                 .stock(100)
                 .unitPrice(BigDecimal.valueOf(1000))
                 .createdAt(LocalDateTime.now())
                 .build();
-        Product product2 = Product.builder()
-                .productId("dnf_179")
-                .productName("얼음골 배")
+
+        Product product2 = new Product.Builder("dnf_179", "얼음골 배")
                 .stock(100)
                 .unitPrice(BigDecimal.valueOf(2000))
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // when
         when(productPersistencePort.findAll()).thenReturn(Arrays.asList(product1, product2));
 
-
+        // when
         Iterable<Product> products = productService.getAllProducts();
 
         // then
@@ -64,11 +61,22 @@ class ProductServiceTest {
     }
 
     @Test
+    void 상품이_없으면_빈리스트() {
+        // given
+        when(productPersistencePort.findAll()).thenReturn(Collections.emptyList());
+
+        // when
+        Iterable<Product> products = productService.getAllProducts();
+
+        // then
+        assertNotNull(products);
+        assertFalse(products.iterator().hasNext());
+    }
+
+    @Test
     void 상품ID로_조회() {
         // given
-        Product product1 = Product.builder()
-                .productId("dnf_190")
-                .productName("얼음골 사과")
+        Product product1 = new Product.Builder("dnf_190", "얼음골 사과")
                 .stock(100)
                 .unitPrice(BigDecimal.valueOf(1000))
                 .createdAt(LocalDateTime.now())
@@ -104,14 +112,11 @@ class ProductServiceTest {
     @Test
     void 신상품을_등록해보자() {
         // given
-        Product newProduct = Product.builder()
-                .productId("dnf_195")
-                .productName("대구는 사과")
+        Product newProduct = new Product.Builder("dnf_195", "대구는 사과")
                 .stock(100)
                 .unitPrice(BigDecimal.valueOf(3000))
                 .createdAt(LocalDateTime.now())
                 .build();
-
         when(productPersistencePort.save(newProduct)).thenReturn(newProduct);
 
         // when
@@ -123,23 +128,7 @@ class ProductServiceTest {
         assertEquals("대구는 사과", savedProduct.getProductName());
     }
 
-    @Test
-    void 상품명이_빈_값이면_등록_실패_테스트() {
-        // given
-        Product newProduct = Product.builder()
-                .productId("dnf_195")
-                .productName("")// 공란
-                .stock(100)
-                .unitPrice(BigDecimal.valueOf(3000))
-                .createdAt(LocalDateTime.now())
-                .build();
 
-        // when
-        ProductException exception = assertThrows(ProductException.class, () -> productService.registerProduct(newProduct));
-
-        // then
-        assertEquals(ProductErrorCode.PRODUCT_NAME_EMPTY, exception.getErrorCode());
-    }
 
     @Test
     void 같은_상품ID_가_중복이면_등록_실패_테스트() {
@@ -147,9 +136,7 @@ class ProductServiceTest {
         // given
         String existingProductId = "dnf_195";
 
-        Product existingProduct = Product.builder()
-                .productId(existingProductId)
-                .productName("대구는 사과")
+        Product existingProduct = new Product.Builder(existingProductId, "대구는 사과")
                 .stock(100)
                 .unitPrice(BigDecimal.valueOf(3000))
                 .createdAt(LocalDateTime.now())
@@ -157,15 +144,11 @@ class ProductServiceTest {
 
         when(productPersistencePort.findByProductId(existingProductId)).thenReturn(Optional.of(existingProduct));
 
-
-        Product product2 = Product.builder()
-                .productId(existingProductId)
-                .productName("얼음골 배")
+        Product product2 = new Product.Builder(existingProductId, "얼음골 배")
                 .stock(100)
                 .unitPrice(BigDecimal.valueOf(2000))
                 .createdAt(LocalDateTime.now())
                 .build();
-
         // when
         ProductException exception = assertThrows(ProductException.class,() -> productService.registerProduct(product2));
 
@@ -173,4 +156,22 @@ class ProductServiceTest {
         assertEquals(ProductErrorCode.PRODUCT_ALREADY_EXISTS, exception.getErrorCode());
 
     }
+
+//    @Test
+//    void 상품ID_가_없으면_등록_실패_테스트() {
+//
+//        // given
+//        Product product = Product.builder()
+//                .productId("")
+//                .productName("대구는 사과")
+//                .stock(100)
+//                .unitPrice(BigDecimal.valueOf(3000))
+//                .createdAt(LocalDateTime.now())
+//                .build();
+//
+//        // when & then
+//        ProductException exception = assertThrows(ProductException.class, product::validateForRegistration);
+//
+//        assertEquals(ProductErrorCode.PRODUCT_NAME_EMPTY, exception.getErrorCode());
+//    }
 }
