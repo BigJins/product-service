@@ -15,8 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 class ProductServiceTest {
@@ -157,21 +156,48 @@ class ProductServiceTest {
 
     }
 
-//    @Test
-//    void 상품ID_가_없으면_등록_실패_테스트() {
-//
-//        // given
-//        Product product = Product.builder()
-//                .productId("")
-//                .productName("대구는 사과")
-//                .stock(100)
-//                .unitPrice(BigDecimal.valueOf(3000))
-//                .createdAt(LocalDateTime.now())
-//                .build();
-//
-//        // when & then
-//        ProductException exception = assertThrows(ProductException.class, product::validateForRegistration);
-//
-//        assertEquals(ProductErrorCode.PRODUCT_NAME_EMPTY, exception.getErrorCode());
-//    }
+
+    @Test
+    void 상품찾고_재고를_줄일_수_있다() {
+        // given
+        Product product1 = new Product.Builder("dnf_190", "얼음골 사과")
+                .stock(100)
+                .unitPrice(BigDecimal.valueOf(1000))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(productPersistencePort.findByProductId("dnf_190")).thenReturn(Optional.of(product1));
+
+        // when
+        Product updated = productService.decreaseStock("dnf_190", 30);
+
+        // then
+        assertEquals(70, updated.getStock());
+
+        // updateStock 사용 검증
+        verify(productPersistencePort).updateStock("dnf_190", 30);
+    }
+
+    @Test
+    void 상품찾고_재고를_늘릴_수_있다() {
+        // given
+        Product product1 = new Product.Builder("dnf_190", "얼음골 사과")
+                .stock(100)
+                .unitPrice(BigDecimal.valueOf(1000))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(productPersistencePort.findByProductId("dnf_190")).thenReturn(Optional.of(product1));
+
+        // when
+        Product updated = productService.increaseStock("dnf_190", 30);
+
+        // then
+        assertEquals(130, updated.getStock());
+
+        // updateStock 사용 검증
+        verify(productPersistencePort).updateStock("dnf_190", 30);
+    }
+
+
 }

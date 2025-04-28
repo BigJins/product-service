@@ -9,4 +9,7 @@ public interface ProductPersistencePort {
     Optional<Product> findByProductId(String productId);
 
     Product save(Product product);
+
+    // 재고만 건들고 싶어서
+    void updateStock(String productId, int stock);
 }

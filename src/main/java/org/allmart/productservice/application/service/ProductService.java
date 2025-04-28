@@ -22,9 +22,7 @@ public class ProductService implements ProductUseCase {
 
     @Override
     public Product getProductById(String productId) {
-
-        return productPersistencePort.findByProductId(productId).orElseThrow(()
-                -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
+        return findProductByIdThrows(productId);
     }
 
     @Override
@@ -36,5 +34,32 @@ public class ProductService implements ProductUseCase {
         });
 
         return productPersistencePort.save(product);
+    }
+
+    @Override
+    public Product decreaseStock(String productId, int quantity) {
+        Product product = findProductByIdThrows(productId);
+
+        Product updateProduct= product.decreaseStock(quantity);
+
+        productPersistencePort.updateStock(updateProduct.getProductId(), quantity);
+
+        return updateProduct;
+    }
+
+    @Override
+    public Product increaseStock(String productId, int quantity) {
+        Product product = findProductByIdThrows(productId);
+
+        Product updateProduct= product.increaseStock(quantity);
+
+        productPersistencePort.updateStock(updateProduct.getProductId(), quantity);
+
+        return updateProduct;
+    }
+
+    private Product findProductByIdThrows(String productId) {
+        return productPersistencePort.findByProductId(productId).orElseThrow(()
+                -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 }
