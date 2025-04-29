@@ -10,6 +10,7 @@ public interface ProductPersistencePort {
 
     Product save(Product product);
 
-    // 재고만 건들고 싶어서
-    void updateStock(String productId, int stock);
+    void increaseStock(String productId, int amount);
+
+    void decreaseStock(String productId, int amount);
 }

@@ -175,7 +175,7 @@ class ProductServiceTest {
         assertEquals(70, updated.getStock());
 
         // updateStock 사용 검증
-        verify(productPersistencePort).updateStock("dnf_190", 30);
+        verify(productPersistencePort).decreaseStock("dnf_190", 30);
     }
 
     @Test
@@ -196,7 +196,7 @@ class ProductServiceTest {
         assertEquals(130, updated.getStock());
 
         // updateStock 사용 검증
-        verify(productPersistencePort).updateStock("dnf_190", 30);
+        verify(productPersistencePort).increaseStock("dnf_190", 30);
     }
 
 

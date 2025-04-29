@@ -87,6 +87,7 @@ public class Product {
 //        return this.toBuilder().stock(this.stock - quantity).build();
         return new Builder(productId, productName)
                 .stock(stock - quantity)
+                .unitPrice(unitPrice)
                 .createdAt(createdAt)
                 .build();
     }
@@ -97,6 +98,7 @@ public class Product {
 //        return this.toBuilder().stock(this.stock + quantity).build();
         return new Builder(productId, productName)
                 .stock(stock + quantity)
+                .unitPrice(unitPrice)
                 .createdAt(createdAt)
                 .build();
 

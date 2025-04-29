@@ -1,4 +1,4 @@
-package org.allmart.productservice.entity;
+package org.allmart.productservice.infrastructure.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

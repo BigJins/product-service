@@ -11,29 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ProductTest {
 
-//
-//    private final String productId;
-//    private final String productName;
-//    private final Integer stock;
-//    private final BigDecimal unitPrice;
-//    private final LocalDateTime createdAt;
-//
-//    // 재고 감소
-//    public Product decreaseStock(int quantity) {
-//        return null;
-//    }
-//
-//    // 재고 증가
-//    public Product increaseStock(int quantity) {
-//        return null;
-//    }
-//
-//
-//    // 판매 가능 여부
-//    public boolean isAvailable() {
-//        return false;
-//    }
-
     @Test
     void 재고가_감소한다() {
         // given

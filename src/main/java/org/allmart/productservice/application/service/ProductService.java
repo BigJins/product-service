@@ -42,7 +42,7 @@ public class ProductService implements ProductUseCase {
 
         Product updateProduct= product.decreaseStock(quantity);
 
-        productPersistencePort.updateStock(updateProduct.getProductId(), quantity);
+        productPersistencePort.decreaseStock(updateProduct.getProductId(), quantity);
 
         return updateProduct;
     }
@@ -53,7 +53,7 @@ public class ProductService implements ProductUseCase {
 
         Product updateProduct= product.increaseStock(quantity);
 
-        productPersistencePort.updateStock(updateProduct.getProductId(), quantity);
+        productPersistencePort.increaseStock(updateProduct.getProductId(), quantity);
 
         return updateProduct;
     }
