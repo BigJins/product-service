@@ -30,9 +30,6 @@ public class ProductEntity implements Serializable {
     private String productName;
 
     @Column(nullable = false)
-    private Integer stock;
-
-    @Column(nullable = false)
     private BigDecimal unitPrice;
 
     @CreationTimestamp

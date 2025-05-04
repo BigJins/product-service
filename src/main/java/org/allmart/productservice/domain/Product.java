@@ -10,7 +10,10 @@ public class Product {
 
     private final String productId;
     private final String productName;
-    private final int stock;
+    /**
+     * 레디스 재고 입니다. DB는 계속 저장만
+     */
+    private final long stock;
     private final BigDecimal unitPrice;
     private final LocalDateTime createdAt;
 
@@ -18,11 +21,11 @@ public class Product {
     // 빌더패턴-점층적 생성자 패턴과 자바빈즈 패턴의 장점만
     public static class Builder {
         // 필수 매개변수
-        private String productId;
-        private String productName;
+        private final String productId;
+        private final String productName;
 
         // 선택 매개변수 - 기본값으로 초기화
-        private int stock = 0;
+        private long stock = 0;
         private BigDecimal unitPrice = BigDecimal.ZERO;
         private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -31,7 +34,7 @@ public class Product {
             this.productName = productName;
         }
 
-        public Builder stock(int val) {
+        public Builder stock(long val) {
             stock = val;
             return this;
         }
@@ -69,7 +72,7 @@ public class Product {
         return productName;
     }
 
-    public int getStock() {
+    public long getStock() {
         return stock;
     }
 
@@ -82,7 +85,7 @@ public class Product {
     }
 
     // 재고 감소
-    public Product decreaseStock(int quantity) {
+    public Product decreaseStock(long quantity) {
         if (this.stock - quantity < 0) throw new ProductException(ProductErrorCode.STOCK_SHORTAGE);
 //        return this.toBuilder().stock(this.stock - quantity).build();
         return new Builder(productId, productName)
@@ -93,7 +96,7 @@ public class Product {
     }
 
     // 재고 증가
-    public Product increaseStock(int quantity) {
+    public Product increaseStock(long quantity) {
         if (quantity <= 0) throw new ProductException(ProductErrorCode.INVALID_STOCK_QUANTITY);
 //        return this.toBuilder().stock(this.stock + quantity).build();
         return new Builder(productId, productName)

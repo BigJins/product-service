@@ -10,7 +10,7 @@ public interface ProductPersistencePort {
 
     Product save(Product product);
 
-    void increaseStock(String productId, int amount);
+    void recordStockIncrease(String productId, long quantity);
 
-    void decreaseStock(String productId, int amount);
+    void recordStockDecrease(String productId, long quantity);
 }

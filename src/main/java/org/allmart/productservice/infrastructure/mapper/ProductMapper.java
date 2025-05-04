@@ -8,7 +8,6 @@ public class ProductMapper {
     // Entity -> Domain
     public static Product toDomain(ProductEntity entity) {
         return new Product.Builder(entity.getProductId(), entity.getProductName())
-                .stock(entity.getStock())
                 .unitPrice(entity.getUnitPrice())
                 .createdAt(entity.getCreatedAt())
                 .build();
@@ -19,7 +18,6 @@ public class ProductMapper {
         return ProductEntity.builder()
                 .productId(domain.getProductId())
                 .productName(domain.getProductName())
-                .stock(domain.getStock())
                 .unitPrice(domain.getUnitPrice())
                 .createdAt(domain.getCreatedAt())
                 .build();

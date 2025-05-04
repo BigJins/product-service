@@ -37,23 +37,23 @@ public class ProductService implements ProductUseCase {
     }
 
     @Override
-    public Product decreaseStock(String productId, int quantity) {
+    public Product decreaseStock(String productId, long quantity) {
         Product product = findProductByIdThrows(productId);
 
         Product updateProduct= product.decreaseStock(quantity);
 
-        productPersistencePort.decreaseStock(updateProduct.getProductId(), quantity);
+        productPersistencePort.recordStockDecrease(updateProduct.getProductId(), quantity);
 
         return updateProduct;
     }
 
     @Override
-    public Product increaseStock(String productId, int quantity) {
+    public Product increaseStock(String productId, long quantity) {
         Product product = findProductByIdThrows(productId);
 
         Product updateProduct= product.increaseStock(quantity);
 
-        productPersistencePort.increaseStock(updateProduct.getProductId(), quantity);
+        productPersistencePort.recordStockIncrease(updateProduct.getProductId(), quantity);
 
         return updateProduct;
     }

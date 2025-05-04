@@ -9,7 +9,7 @@ public interface ProductUseCase {
 
     Product registerProduct(Product product);
 
-    Product decreaseStock(String productId, int quantity);
+    Product decreaseStock(String productId, long quantity);
 
-    Product increaseStock(String productId, int quantity);
+    Product increaseStock(String productId, long quantity);
 }
