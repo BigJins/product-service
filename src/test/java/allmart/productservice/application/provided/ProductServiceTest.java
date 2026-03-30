@@ -1,5 +1,6 @@
 package allmart.productservice.application.provided;
 
+import allmart.productservice.adapter.client.InventoryServiceClient;
 import allmart.productservice.application.required.ImageStorage;
 import allmart.productservice.domain.product.Product;
 import allmart.productservice.domain.product.ProductStatus;
@@ -23,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
 @Transactional
 class ProductServiceTest {
 
-    // S3 호출 없이 테스트하기 위한 가짜 구현체
+    // S3, inventory-service 호출 없이 테스트하기 위한 가짜 구현체
     @TestConfiguration
     static class TestConfig {
         @Bean
@@ -36,6 +37,15 @@ class ProductServiceTest {
                 }
                 @Override
                 public void delete(String imageUrl) { /* no-op */ }
+            };
+        }
+
+        @Bean
+        @Primary
+        public InventoryServiceClient fakeInventoryServiceClient() {
+            return new InventoryServiceClient(null) {
+                @Override
+                public void initialize(Long productId, int quantity) { /* no-op */ }
             };
         }
     }
