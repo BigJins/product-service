@@ -10,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.ByteArrayOutputStream;
@@ -47,7 +46,6 @@ public class S3ImageStorage implements ImageStorage {
                         .key(key)
                         .contentType(CONTENT_TYPE)
                         .contentLength((long) resized.length)
-                        .acl(ObjectCannedACL.PUBLIC_READ)
                         .build(),
                 RequestBody.fromBytes(resized)
         );
