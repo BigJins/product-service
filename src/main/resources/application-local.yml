@@ -1,2 +1,0 @@
-# 로컬 개발 설정은 config-server의 product-service-local.yml 에서 관리됩니다.
-# config-server 기동: cd /c/newpractice/config-server && ./gradlew bootRun
