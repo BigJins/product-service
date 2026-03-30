@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+  cloud:
+    config:
+      enabled: false
+    bus:
+      enabled: false
+
+# 테스트: S3 실제 호출 없이 FakeImageStorage 사용
+aws:
+  s3:
+    endpoint: http://localhost:9000
+    bucket: test-bucket
+    access-key: test
+    secret-key: test
+    region: us-east-1
