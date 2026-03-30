@@ -99,12 +99,7 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
     }
 
     private void initializeInventory(Long productId, int quantity) {
-        try {
-            inventoryServiceClient.initialize(productId, quantity);
-        } catch (Exception e) {
-            // 재고 초기화 실패는 상품 등록을 롤백하지 않음 — 관리자가 별도 보정 가능
-            log.error("재고 초기화 실패 — productId={}, quantity={}, error={}", productId, quantity, e.getMessage());
-        }
+        inventoryServiceClient.initialize(productId, quantity);
     }
 
     private Category findCategoryOrThrow(Long categoryId) {
