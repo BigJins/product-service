@@ -1,5 +1,6 @@
 package allmart.productservice.domain.category;
 
+import allmart.productservice.config.SnowflakeGenerated;
 import allmart.productservice.domain.AbstractEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import java.util.Objects;
 public class Category extends AbstractEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SnowflakeGenerated
     private Long categoryId;
 
     @Column(nullable = false, unique = true)

@@ -1,5 +1,6 @@
 package allmart.productservice.domain.product;
 
+import allmart.productservice.config.SnowflakeGenerated;
 import allmart.productservice.domain.AbstractEntity;
 import allmart.productservice.domain.category.Category;
 import jakarta.persistence.*;
@@ -20,7 +21,7 @@ import java.util.Objects;
 public class Product extends AbstractEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SnowflakeGenerated
     private Long productId;
 
     @ManyToOne(fetch = FetchType.LAZY)
