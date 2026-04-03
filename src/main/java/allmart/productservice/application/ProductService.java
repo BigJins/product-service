@@ -47,6 +47,8 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
 
         initializeInventory(saved.getProductId(), initialQuantity);
 
+        log.info("상품 등록 완료: productId={}, name={}, price={}, categoryId={}, status={}",
+                saved.getProductId(), name, price, categoryId, saved.getStatus());
         return saved;
     }
 
@@ -79,6 +81,7 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
         String newImageUrl = null;
         if (image != null && !image.isEmpty()) {
             String newUrl = imageStorage.upload(image, "products/" + productId);
+            log.info("상품 이미지 교체: productId={}, oldUrl={}, newUrl={}", productId, product.getImageUrl(), newUrl);
             imageStorage.delete(product.getImageUrl()); // 업로드 성공 후 삭제
             newImageUrl = newUrl;
         }
@@ -88,6 +91,7 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
         if ("ON_SALE".equalsIgnoreCase(status)) product.activate();
         else if ("HIDDEN".equalsIgnoreCase(status)) product.deactivate();
 
+        log.info("상품 수정 완료: productId={}, name={}, price={}, status={}", productId, product.getName(), product.getPrice(), product.getStatus());
         return product;
     }
 
@@ -96,6 +100,7 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
     public void delete(Long productId) {
         Product product = findEditableProduct(productId);
         product.delete();
+        log.info("상품 삭제(논리): productId={}, name={}", productId, product.getName());
     }
 
     private void initializeInventory(Long productId, int quantity) {
