@@ -4,13 +4,13 @@ import allmart.productservice.application.provided.CategoryManager;
 import allmart.productservice.application.required.CategoryRepository;
 import allmart.productservice.domain.category.Category;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Log4j2
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CategoryService implements CategoryManager {
