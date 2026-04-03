@@ -43,10 +43,7 @@ dependencies {
 
     runtimeOnly("com.mysql:mysql-connector-j")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
-    implementation("org.springframework.boot:spring-boot-opentelemetry")
-    implementation("org.springframework.boot:spring-boot-micrometer-tracing")
-    implementation("io.micrometer:micrometer-tracing-bridge-otel")
-    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
+    implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
     implementation("com.github.loki4j:loki-logback-appender:1.5.2")
 
     compileOnly("org.projectlombok:lombok")
