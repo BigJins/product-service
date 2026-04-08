@@ -12,7 +12,7 @@
           - @CreatedDate + @EntityListeners: Spring Data Auditing 전용 (JPA XML 미지원)
     -->
 
-    <entity class="allmart.productservice.domain.product.Product">
+    <entity class="allmart.productservice.domain.product.Product" access="FIELD">
         <table name="tbl_product"/>
         <attributes>
             <many-to-one name="category" fetch="LAZY" optional="false">
@@ -49,7 +49,7 @@
         </attributes>
     </entity>
 
-    <entity class="allmart.productservice.domain.category.Category">
+    <entity class="allmart.productservice.domain.category.Category" access="FIELD">
         <table name="tbl_category"/>
         <attributes>
             <basic name="name">
