@@ -1,16 +1,22 @@
 package allmart.productservice.domain.category;
 
 import allmart.productservice.config.SnowflakeGenerated;
-import allmart.productservice.domain.AbstractEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
 @Table(name = "tbl_category")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
-public class Category extends AbstractEntity {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Category {
 
     @Id
     @SnowflakeGenerated
@@ -19,7 +25,9 @@ public class Category extends AbstractEntity {
     @Column(nullable = false, unique = true)
     private String name;
 
-    protected Category() {}
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
     private Category(String name) {
         this.name = name;

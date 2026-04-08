@@ -6,3 +6,13 @@ spring:
 
 server:
   port: 8083
+
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:}   # 미설정 시 LLM 분류 실패 → taxType=PENDING 유지
+
+
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: false   # Prometheus 스크래핑 사용 — OTLP metrics 비활성화

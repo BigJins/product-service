@@ -8,7 +8,10 @@ public record ProductResponse(
         String categoryName,
         String name,
         String description,
-        long price,
+        long sellingPrice,
+        long purchasePrice,
+        long margin,
+        String taxType,
         String imageUrl,
         String status
 ) {
@@ -19,7 +22,10 @@ public record ProductResponse(
                 p.getCategory().getName(),
                 p.getName(),
                 p.getDescription(),
-                p.getPrice(),
+                p.getSellingPrice(),
+                p.getPurchasePrice(),
+                p.margin().amount(),
+                p.getTaxType().name(),
                 p.getImageUrl(),
                 p.getStatus().name()
         );

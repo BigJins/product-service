@@ -38,12 +38,13 @@ public class ProductApi {
             @RequestParam @Positive(message = "카테고리 ID는 양수여야 합니다.") Long categoryId,
             @RequestParam @NotBlank(message = "상품명은 필수입니다.") String name,
             @RequestParam(required = false) String description,
-            @RequestParam @Positive(message = "가격은 양수여야 합니다.") long price,
+            @RequestParam @Positive(message = "판매가는 양수여야 합니다.") long sellingPrice,
+            @RequestParam @Positive(message = "매입가는 양수여야 합니다.") long purchasePrice,
             @RequestParam(name = "stock", defaultValue = "0") int initialQuantity,
             @RequestParam(required = false, defaultValue = "ON_SALE") String status,
             @RequestPart("image") MultipartFile image) {
 
-        Product product = productRegistrar.register(categoryId, name, description, price, initialQuantity, status, image);
+        Product product = productRegistrar.register(categoryId, name, description, sellingPrice, purchasePrice, initialQuantity, status, image);
         return ProductResponse.of(product);
     }
 
@@ -68,12 +69,13 @@ public class ProductApi {
             @PathVariable Long productId,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String description,
-            @RequestParam(required = false) Long price,
+            @RequestParam(required = false) Long sellingPrice,
+            @RequestParam(required = false) Long purchasePrice,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String status,
             @RequestPart(value = "image", required = false) MultipartFile image) {
 
-        return ProductResponse.of(productModifier.update(productId, name, description, price, categoryId, status, image));
+        return ProductResponse.of(productModifier.update(productId, name, description, sellingPrice, purchasePrice, categoryId, status, image));
     }
 
     /** 상품 삭제 — soft delete (MEMBER 전용) */

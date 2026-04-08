@@ -4,6 +4,7 @@ import allmart.productservice.adapter.client.InventoryServiceClient;
 import allmart.productservice.application.required.ImageStorage;
 import allmart.productservice.domain.product.Product;
 import allmart.productservice.domain.product.ProductStatus;
+import allmart.productservice.domain.product.TaxType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -68,12 +69,13 @@ class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("카테고리 생성 후 상품을 등록하면 ACTIVE 상태로 저장된다")
-    void register_product_is_active() {
+    @DisplayName("카테고리 생성 후 상품을 등록하면 ACTIVE 상태, taxType은 PENDING이다")
+    void register_product_is_active_and_pending_tax() {
         var category = categoryManager.create("과일");
-        Product product = productRegistrar.register(category.getCategoryId(), "제주 감귤", "달콤", 15000, 100, "ON_SALE", dummyImage());
+        Product product = productRegistrar.register(category.getCategoryId(), "제주 감귤", "달콤", 15000, 10000, 100, "ON_SALE", dummyImage());
         assertThat(product.getProductId()).isNotNull();
         assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
+        assertThat(product.getTaxType()).isEqualTo(TaxType.PENDING);
     }
 
     @Test
@@ -89,7 +91,7 @@ class ProductServiceTest {
     @DisplayName("상품 삭제 후 조회하면 예외가 발생한다")
     void deleted_product_not_found() {
         var category = categoryManager.create("유제품");
-        Product product = productRegistrar.register(category.getCategoryId(), "우유", null, 2000, 50, "ON_SALE", dummyImage());
+        Product product = productRegistrar.register(category.getCategoryId(), "우유", null, 2000, 1200, 50, "ON_SALE", dummyImage());
         productModifier.delete(product.getProductId());
 
         assertThatThrownBy(() -> productFinder.findById(product.getProductId()))
@@ -100,20 +102,29 @@ class ProductServiceTest {
     @Test
     @DisplayName("존재하지 않는 카테고리로 상품 등록 시 예외가 발생한다")
     void register_with_unknown_category_throws() {
-        assertThatThrownBy(() -> productRegistrar.register(999L, "감귤", null, 10000, 0, "ON_SALE", dummyImage()))
+        assertThatThrownBy(() -> productRegistrar.register(999L, "감귤", null, 10000, 6000, 0, "ON_SALE", dummyImage()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("존재하지 않는 카테고리");
     }
 
     @Test
-    @DisplayName("상품 수정 시 이름과 가격이 변경된다")
-    void update_changes_name_and_price() {
+    @DisplayName("상품 수정 시 이름과 판매가가 변경된다")
+    void update_changes_name_and_selling_price() {
         var category = categoryManager.create("음료");
-        Product product = productRegistrar.register(category.getCategoryId(), "콜라", null, 1500, 30, "ON_SALE", dummyImage());
-        productModifier.update(product.getProductId(), "제로콜라", null, 1800L, null, null, null);
+        Product product = productRegistrar.register(category.getCategoryId(), "콜라", null, 1500, 900, 30, "ON_SALE", dummyImage());
+        productModifier.update(product.getProductId(), "제로콜라", null, 1800L, null, null, null, null);
 
         Product updated = productFinder.findById(product.getProductId());
         assertThat(updated.getName()).isEqualTo("제로콜라");
-        assertThat(updated.getPrice()).isEqualTo(1800);
+        assertThat(updated.getSellingPrice()).isEqualTo(1800);
+    }
+
+    @Test
+    @DisplayName("판매가와 매입가로 마진이 자동 계산된다")
+    void margin_is_calculated_from_prices() {
+        var category = categoryManager.create("견과류");
+        Product product = productRegistrar.register(category.getCategoryId(), "호두", null, 20000, 12000, 0, "ON_SALE", dummyImage());
+
+        assertThat(product.margin().amount()).isEqualTo(8000);
     }
 }

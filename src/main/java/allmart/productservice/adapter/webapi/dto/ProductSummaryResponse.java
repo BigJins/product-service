@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 public record ProductSummaryResponse(
         Long productId,
         String name,
-        long price,
+        long sellingPrice,
+        String taxType,
         String imageUrl,
         Long categoryId,
         String categoryName,
@@ -18,7 +19,8 @@ public record ProductSummaryResponse(
         return new ProductSummaryResponse(
                 p.getProductId(),
                 p.getName(),
-                p.getPrice(),
+                p.getSellingPrice(),
+                p.getTaxType().name(),
                 p.getImageUrl(),
                 p.getCategory().getCategoryId(),
                 p.getCategory().getName(),

@@ -7,6 +7,8 @@ import allmart.productservice.application.provided.ProductRegistrar;
 import allmart.productservice.application.required.CategoryRepository;
 import allmart.productservice.application.required.ImageStorage;
 import allmart.productservice.application.required.ProductRepository;
+import allmart.productservice.application.required.TaxClassifier;
+import allmart.productservice.domain.product.TaxType;
 import allmart.productservice.domain.category.Category;
 import allmart.productservice.domain.product.Money;
 import allmart.productservice.domain.product.Product;
@@ -28,6 +30,7 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
     private final CategoryRepository categoryRepository;
     private final ImageStorage imageStorage;
     private final InventoryServiceClient inventoryServiceClient;
+    private final TaxClassifier taxClassifier;
 
     /**
      * 상품 등록 흐름:
@@ -37,18 +40,23 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
      */
     @Override
     @Transactional
-    public Product register(Long categoryId, String name, String description, long price, int initialQuantity, String status, MultipartFile image) {
+    public Product register(Long categoryId, String name, String description, long sellingPrice, long purchasePrice, int initialQuantity, String status, MultipartFile image) {
         Category category = findCategoryOrThrow(categoryId);
         String imageUrl = imageStorage.upload(image, "products/temp");
 
-        Product product = Product.create(category, name, description, Money.of(price), imageUrl);
+        Product product = Product.create(category, name, description, Money.of(sellingPrice), Money.of(purchasePrice), imageUrl);
         if ("HIDDEN".equalsIgnoreCase(status)) product.deactivate();
         Product saved = productRepository.save(product);
 
+        // 세금 유형 자동 분류 — 실패 시 PENDING 유지 (상품 등록 자체는 항상 성공)
+        // 트레이드오프: 동일 트랜잭션 내 외부 API 호출 → DB 커넥션 최대 5s 추가 점유.
+        // 상품 등록은 관리자 저빈도 작업이므로 실용적으로 수용.
+        classifyTaxType(saved, name, description);
+
         initializeInventory(saved.getProductId(), initialQuantity);
 
-        log.info("상품 등록 완료: productId={}, name={}, price={}, categoryId={}, status={}",
-                saved.getProductId(), name, price, categoryId, saved.getStatus());
+        log.info("상품 등록 완료: productId={}, name={}, sellingPrice={}, purchasePrice={}, taxType={}, categoryId={}, status={}",
+                saved.getProductId(), name, sellingPrice, purchasePrice, saved.getTaxType(), categoryId, saved.getStatus());
         return saved;
     }
 
@@ -71,7 +79,7 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
 
     @Override
     @Transactional
-    public Product update(Long productId, String name, String description, Long price, Long categoryId, String status, MultipartFile image) {
+    public Product update(Long productId, String name, String description, Long sellingPrice, Long purchasePrice, Long categoryId, String status, MultipartFile image) {
         Product product = findEditableProduct(productId);
 
         if (categoryId != null) {
@@ -86,12 +94,15 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
             newImageUrl = newUrl;
         }
 
-        product.update(name, description, price != null ? Money.of(price) : null, newImageUrl);
+        product.update(name, description,
+                sellingPrice != null ? Money.of(sellingPrice) : null,
+                purchasePrice != null ? Money.of(purchasePrice) : null,
+                newImageUrl);
 
         if ("ON_SALE".equalsIgnoreCase(status)) product.activate();
         else if ("HIDDEN".equalsIgnoreCase(status)) product.deactivate();
 
-        log.info("상품 수정 완료: productId={}, name={}, price={}, status={}", productId, product.getName(), product.getPrice(), product.getStatus());
+        log.info("상품 수정 완료: productId={}, name={}, sellingPrice={}, status={}", productId, product.getName(), product.getSellingPrice(), product.getStatus());
         return product;
     }
 
@@ -101,6 +112,17 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
         Product product = findEditableProduct(productId);
         product.delete();
         log.info("상품 삭제(논리): productId={}, name={}", productId, product.getName());
+    }
+
+    private void classifyTaxType(Product product, String name, String description) {
+        try {
+            TaxType taxType = taxClassifier.classify(name, description);
+            product.updateTaxType(taxType);
+            log.info("세금 유형 자동 분류 완료: productId={}, taxType={}", product.getProductId(), taxType);
+        } catch (Exception e) {
+            // LLM 실패 → TAXABLE 유지 (기본값). 배치가 추후 TAX_EXEMPT 여부 재검토
+            log.warn("세금 유형 자동 분류 실패, TAXABLE 유지: productId={}, reason={}", product.getProductId(), e.getMessage());
+        }
     }
 
     private void initializeInventory(Long productId, int quantity) {

@@ -10,4 +10,18 @@
         <Class name="~allmart\.productservice\.config\..*"/>
         <Bug pattern="THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"/>
     </Match>
+    <!-- AnthropicTaxClassifier text block: SpotBugs가 텍스트 블록 개행을 \n으로 오탐 -->
+    <Match>
+        <Class name="allmart.productservice.adapter.client.AnthropicTaxClassifier"/>
+        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
+    </Match>
+    <!-- AnthropicRequest/Response는 외부 API DTO — List 불변화보다 가독성 우선 -->
+    <Match>
+        <Class name="~allmart\.productservice\.adapter\.client\.dto\..*"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Class name="~allmart\.productservice\.adapter\.client\.dto\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
 </FindBugsFilter>
