@@ -16,9 +16,6 @@
     <entity class="allmart.productservice.domain.product.Product">
         <table name="tbl_product"/>
         <attributes>
-            <many-to-one name="category" fetch="LAZY" optional="false">
-                <join-column name="category_id" nullable="false"/>
-            </many-to-one>
             <basic name="name">
                 <column nullable="false"/>
             </basic>
