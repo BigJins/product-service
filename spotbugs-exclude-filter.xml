@@ -15,6 +15,14 @@
         <Class name="allmart.productservice.adapter.client.AnthropicTaxClassifier"/>
         <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
     </Match>
+    <!--
+        JPA 엔티티 간 관계 참조 저장 — orm.xml로 @ManyToOne 이동 후 SpotBugs가 JPA 관계임을 인식 못함.
+        JPA 엔티티 참조를 방어 복사하면 세션 캐시/동일성 보장이 깨지므로 정상 패턴.
+    -->
+    <Match>
+        <Class name="~allmart\.productservice\.domain\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
     <!-- AnthropicRequest/Response는 외부 API DTO — List 불변화보다 가독성 우선 -->
     <Match>
         <Class name="~allmart\.productservice\.adapter\.client\.dto\..*"/>

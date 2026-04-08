@@ -2,7 +2,9 @@ package allmart.productservice.domain.product;
 
 import allmart.productservice.config.SnowflakeGenerated;
 import allmart.productservice.domain.category.Category;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +12,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * 상품 Aggregate Root
@@ -20,7 +23,6 @@ import java.util.Objects;
  *   ACTIVE | INACTIVE → DELETED (소프트 삭제, 터미널)
  */
 @Entity
-@Table(name = "tbl_product")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -30,64 +32,48 @@ public class Product {
     @SnowflakeGenerated
     private Long productId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @Column(nullable = false)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
     private long sellingPrice;   // 판매가 — 소비자에게 노출되는 가격
 
-    @Column(nullable = false)
     private long purchasePrice;  // 매입가 — 마진 계산 기준
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private TaxType taxType;     // PENDING: LLM 판별 대기, TAXABLE: 과세, TAX_EXEMPT: 면세
 
-    @Column(nullable = false)
     private String imageUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private ProductStatus status;
 
-    @Column
-    private String unit;        // 판매 단위 예: "박스", "팩", "개" (chat-service 단위 모호성 해소용)
+    private String unit;        // 판매 단위 예: "박스", "팩", "개"
 
-    @Column
     private Integer unitSize;   // 단위당 개수 예: 10 (1박스=10개), null이면 1개 단위
 
     @CreatedDate
-    @Column(updatable = false)
     private LocalDateTime createdAt;
-
-    private Product(Category category, String name, String description,
-                    Money sellingPrice, Money purchasePrice, String imageUrl) {
-        this.category = category;
-        this.name = name;
-        this.description = description;
-        this.sellingPrice = sellingPrice.amount();
-        this.purchasePrice = purchasePrice.amount();
-        this.taxType = TaxType.PENDING; // LLM 분류 전 대기 상태
-        this.imageUrl = imageUrl;
-        this.status = ProductStatus.ACTIVE;
-    }
 
     public static Product create(Category category, String name, String description,
                                  Money sellingPrice, Money purchasePrice, String imageUrl) {
-        Objects.requireNonNull(category, "카테고리는 필수입니다.");
-        Objects.requireNonNull(name, "상품명은 필수입니다.");
+        requireNonNull(category, "카테고리는 필수입니다.");
+        requireNonNull(name, "상품명은 필수입니다.");
         if (name.isBlank()) throw new IllegalArgumentException("상품명은 비어있을 수 없습니다.");
-        Objects.requireNonNull(sellingPrice, "판매가는 필수입니다.");
-        Objects.requireNonNull(purchasePrice, "매입가는 필수입니다.");
-        Objects.requireNonNull(imageUrl, "이미지 URL은 필수입니다.");
-        return new Product(category, name, description, sellingPrice, purchasePrice, imageUrl);
+        requireNonNull(sellingPrice, "판매가는 필수입니다.");
+        requireNonNull(purchasePrice, "매입가는 필수입니다.");
+        requireNonNull(imageUrl, "이미지 URL은 필수입니다.");
+
+        Product product = new Product();
+        product.category = category;
+        product.name = name;
+        product.description = description;
+        product.sellingPrice = sellingPrice.amount();
+        product.purchasePrice = purchasePrice.amount();
+        product.taxType = TaxType.PENDING; // LLM 분류 전 대기 상태
+        product.imageUrl = imageUrl;
+        product.status = ProductStatus.ACTIVE;
+        return product;
     }
 
     // --- 파생 값 ---
@@ -108,16 +94,12 @@ public class Product {
     // --- 상태 전이 ---
 
     public void deactivate() {
-        if (this.status == ProductStatus.DELETED) {
-            throw new IllegalStateException("삭제된 상품은 상태를 변경할 수 없습니다.");
-        }
+        requireNotDeleted();
         this.status = ProductStatus.INACTIVE;
     }
 
     public void activate() {
-        if (this.status == ProductStatus.DELETED) {
-            throw new IllegalStateException("삭제된 상품은 상태를 변경할 수 없습니다.");
-        }
+        requireNotDeleted();
         this.status = ProductStatus.ACTIVE;
     }
 
@@ -127,22 +109,20 @@ public class Product {
     }
 
     public void updateTaxType(TaxType taxType) {
-        Objects.requireNonNull(taxType);
+        requireNonNull(taxType);
         this.taxType = taxType;
     }
 
     // --- 정보 수정 ---
 
     public void changeCategory(Category newCategory) {
-        Objects.requireNonNull(newCategory, "카테고리는 필수입니다.");
-        if (this.status == ProductStatus.DELETED) throw new IllegalStateException("삭제된 상품은 수정할 수 없습니다.");
+        requireNonNull(newCategory, "카테고리는 필수입니다.");
+        requireNotDeleted();
         this.category = newCategory;
     }
 
     public void update(String name, String description, Money sellingPrice, Money purchasePrice, String imageUrl) {
-        if (this.status == ProductStatus.DELETED) {
-            throw new IllegalStateException("삭제된 상품은 수정할 수 없습니다.");
-        }
+        requireNotDeleted();
         if (name != null && !name.isBlank()) this.name = name;
         if (description != null) this.description = description;
         if (sellingPrice != null) this.sellingPrice = sellingPrice.amount();
@@ -151,12 +131,18 @@ public class Product {
     }
 
     public void updateUnit(String unit, Integer unitSize) {
-        if (this.status == ProductStatus.DELETED) throw new IllegalStateException("삭제된 상품은 수정할 수 없습니다.");
+        requireNotDeleted();
         this.unit = unit;
         this.unitSize = unitSize;
     }
 
     public boolean isVisible() {
         return this.status == ProductStatus.ACTIVE;
+    }
+
+    private void requireNotDeleted() {
+        if (this.status == ProductStatus.DELETED) {
+            throw new IllegalStateException("삭제된 상품은 수정할 수 없습니다.");
+        }
     }
 }

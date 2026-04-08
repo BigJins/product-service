@@ -3,6 +3,7 @@ package allmart.productservice.application;
 import allmart.productservice.application.provided.CategoryManager;
 import allmart.productservice.application.required.CategoryRepository;
 import allmart.productservice.domain.category.Category;
+import allmart.productservice.domain.category.CategoryStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,14 +33,13 @@ public class CategoryService implements CategoryManager {
     @Override
     @Transactional(readOnly = true)
     public List<Category> findAll() {
-        return categoryRepository.findAll();
+        return categoryRepository.findAllByStatus(CategoryStatus.ACTIVE);
     }
 
     @Override
     @Transactional
     public Category rename(Long categoryId, String name) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
+        Category category = findActiveOrThrow(categoryId);
         if (categoryRepository.existsByName(name)) {
             log.warn("카테고리 이름 변경 실패 - 이미 존재하는 이름: {}", name);
             throw new IllegalStateException("이미 존재하는 카테고리명입니다: " + name);
@@ -53,9 +53,14 @@ public class CategoryService implements CategoryManager {
     @Override
     @Transactional
     public void delete(Long categoryId) {
-        Category category = categoryRepository.findById(categoryId)
+        Category category = findActiveOrThrow(categoryId);
+        category.delete();
+        log.info("카테고리 삭제(논리): categoryId={}, name={}", categoryId, category.getName());
+    }
+
+    private Category findActiveOrThrow(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .filter(c -> c.getStatus() != CategoryStatus.DELETED)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
-        categoryRepository.deleteById(categoryId);
-        log.info("카테고리 삭제: categoryId={}, name={}", categoryId, category.getName());
     }
 }

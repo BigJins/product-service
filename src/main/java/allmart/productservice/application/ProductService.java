@@ -8,6 +8,7 @@ import allmart.productservice.application.required.CategoryRepository;
 import allmart.productservice.application.required.ImageStorage;
 import allmart.productservice.application.required.ProductRepository;
 import allmart.productservice.application.required.TaxClassifier;
+import allmart.productservice.domain.category.CategoryStatus;
 import allmart.productservice.domain.product.TaxType;
 import allmart.productservice.domain.category.Category;
 import allmart.productservice.domain.product.Money;
@@ -131,6 +132,7 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
 
     private Category findCategoryOrThrow(Long categoryId) {
         return categoryRepository.findById(categoryId)
+                .filter(c -> c.getStatus() != CategoryStatus.DELETED)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
     }
 
