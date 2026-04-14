@@ -6,14 +6,18 @@ import allmart.productservice.application.provided.ProductModifier;
 import allmart.productservice.application.provided.ProductRegistrar;
 import allmart.productservice.application.required.CategoryRepository;
 import allmart.productservice.application.required.ImageStorage;
+import allmart.productservice.application.required.OutboxRepository;
 import allmart.productservice.application.required.ProductRepository;
 import allmart.productservice.application.required.TaxClassifier;
 import allmart.productservice.domain.category.CategoryStatus;
+import allmart.productservice.domain.event.OutboxEvent;
 import allmart.productservice.domain.product.TaxType;
 import allmart.productservice.domain.category.Category;
 import allmart.productservice.domain.product.Money;
 import allmart.productservice.domain.product.Product;
 import allmart.productservice.domain.product.ProductStatus;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,6 +25,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -32,6 +38,8 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
     private final ImageStorage imageStorage;
     private final InventoryServiceClient inventoryServiceClient;
     private final TaxClassifier taxClassifier;
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     /**
      * 상품 등록 흐름:
@@ -56,6 +64,20 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
 
         initializeInventory(saved.getProductId(), initialQuantity);
 
+        // Outbox: product.registered.v1 → search-service ES 색인
+        saveOutbox("product.registered.v1", saved.getProductId(), Map.of(
+                "productId", saved.getProductId(),
+                "productName", saved.getName(),
+                "categoryId", category.getCategoryId(),
+                "categoryName", category.getName(),
+                "sellingPrice", saved.getSellingPrice(),
+                "unit", saved.getUnit() != null ? saved.getUnit() : "",
+                "unitSize", saved.getUnitSize() != null ? saved.getUnitSize() : 1,
+                "status", saved.getStatus().name(),
+                "imageUrl", saved.getImageUrl() != null ? saved.getImageUrl() : "",
+                "description", description != null ? description : ""
+        ));
+
         log.info("상품 등록 완료: productId={}, name={}, sellingPrice={}, purchasePrice={}, taxType={}, categoryId={}, status={}",
                 saved.getProductId(), name, sellingPrice, purchasePrice, saved.getTaxType(), categoryId, saved.getStatus());
         return saved;
@@ -76,6 +98,19 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
             return productRepository.findByCategory_CategoryIdAndStatus(categoryId, ProductStatus.ACTIVE, pageable);
         }
         return productRepository.findByStatus(ProductStatus.ACTIVE, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Product> findAllForIndex(Pageable pageable) {
+        return productRepository.findByStatusNot(ProductStatus.DELETED, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Product> searchByKeyword(String keyword, int size) {
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(0, size);
+        return productRepository.findByNameContainingIgnoreCaseAndStatus(keyword, ProductStatus.ACTIVE, pageable);
     }
 
     @Override
@@ -112,6 +147,14 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
     public void delete(Long productId) {
         Product product = findEditableProduct(productId);
         product.delete();
+
+        // Outbox: product.deleted.v1 → search-service ES 삭제
+        saveOutbox("product.deleted.v1", productId, Map.of(
+                "productId", productId,
+                "productName", product.getName(),
+                "deletedAt", java.time.LocalDateTime.now().toString()
+        ));
+
         log.info("상품 삭제(논리): productId={}, name={}", productId, product.getName());
     }
 
@@ -128,6 +171,15 @@ public class ProductService implements ProductRegistrar, ProductFinder, ProductM
 
     private void initializeInventory(Long productId, int quantity) {
         inventoryServiceClient.initialize(productId, quantity);
+    }
+
+    private void saveOutbox(String eventType, Long productId, Object payload) {
+        try {
+            String json = objectMapper.writeValueAsString(payload);
+            outboxRepository.save(OutboxEvent.create(eventType, String.valueOf(productId), json));
+        } catch (JsonProcessingException e) {
+            log.error("Outbox 직렬화 실패: eventType={}, productId={}", eventType, productId, e);
+        }
     }
 
     private Category findCategoryOrThrow(Long categoryId) {
