@@ -32,4 +32,13 @@
         <Class name="~allmart\.productservice\.adapter\.client\.dto\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
+    <!--
+        AbstractEntity.equals()에서 HibernateProxy instanceof 체크.
+        JPA Lazy Loading 프록시 처리를 위한 Hibernate 공식 권장 패턴.
+        SpotBugs는 HibernateProxy가 AbstractEntity 계층이 아니라며 오탐.
+    -->
+    <Match>
+        <Class name="allmart.productservice.domain.AbstractEntity"/>
+        <Bug pattern="EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS"/>
+    </Match>
 </FindBugsFilter>

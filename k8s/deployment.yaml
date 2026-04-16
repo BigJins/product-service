@@ -26,13 +26,13 @@ spec:
             - name: CONFIG_SERVER_URI
               value: "http://config-server:8888"
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "43.203.213.93:19092,43.203.213.93:19093,43.203.213.93:19094"
+              value: "10.0.1.146:19092,10.0.1.146:19093,10.0.1.146:19094"
             - name: DB_HOST
-              value: "52.78.67.189"
+              value: "10.0.1.90"
             - name: DB_PORT
-              value: "3306"
+              value: "3310"
             - name: DB_NAME
-              value: "product"
+              value: "productdb"
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
@@ -47,6 +47,22 @@ spec:
               value: "allmart-product-images"
             - name: AWS_REGION
               value: "ap-northeast-2"
+            - name: S3_BUCKET
+              value: "allmart-product-images"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: secret-access-key
+            - name: ANTHROPIC_API_KEY
+              value: ""
+            - name: INVENTORY_SERVICE_URL
+              value: "http://inventory-service:8085"
             - name: TEMPO_ENDPOINT
               value: "http://43.200.2.221:4318/v1/traces"
             - name: LOKI_URL
@@ -62,13 +78,13 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8083
-            initialDelaySeconds: 60
+            initialDelaySeconds: 200
             periodSeconds: 15
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8083
-            initialDelaySeconds: 60
+            initialDelaySeconds: 200
             periodSeconds: 10
 ---
 apiVersion: v1
